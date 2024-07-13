@@ -1,0 +1,63 @@
+---
+title: "Data_Cleaning"
+author: "Abdelrahman"
+date: "2023-05-08"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Task Detailes 
+
+• Parse the “CSF Metabolites” XML file from HMDB
+  o http://www.hmdb.ca/downloads
+  o Tip for R users: xmlParse combined with xmlToList from the XML package takes ~2 minutes to
+    run, but returns the easiest object to work with.
+
+• For each metabolite, extract the list of all SMPDB pathway IDs it is annotated with
+  (“biological_properties” → “pathways” in the XML).
+
+• How many metabolites are in SMP00044 (“Histidine metabolism”)?
+
+• Go the webpage of that pathway at https://smpdb.ca/view/SMP0000044, and browse to the “Highlight”
+  tab. Why are there more metabolites in this pathway on the webpage than in our analysis?
+
+```{r}
+library(XML)
+#Read the xml file and convert it to data frame 
+csf_data <- xmlToDataFrame(xmlParse("csf_metabolites.xml"))
+
+```
+
+
+```{r}
+#empty vector for store all ids 
+smdb_ids_all <- c()
+
+
+for(i in 1:nrow(csf_data)){
+  #extract each biological properties row 
+  string <- csf_data$biological_properties[i]
+  #extract anu string start with SMP 
+  smdb_ids <- gregexpr("SMP\\d+", string, perl = TRUE)[[1]]
+  #bind all ids in the vector 
+  smdb_ids_all <- c(smdb_ids_all, substring(string, smdb_ids, smdb_ids + 7))
+  
+
+}
+
+#convert the vector to data frame 
+smdp_id <- as.data.frame(smdb_ids_all)
+#count the number of ids that have "SMP00044"
+n_metabolites <- length(smdp_id[smdp_id$smdb_ids_all == "SMP00044" ,])
+
+n_metabolites
+```
+
+
+### How many metabolites are in SMP00044 (“Histidine metabolism”)? 
+
+Different versions of the pathway: The webpage and the XML file may be based on different versions of the same pathway. It is possible that the pathway has been updated between the time when the XML file was generated (2021-10-24)and the time when the webpage was last updated (Last Updated: 2022-10-07), resulting in a different number of metabolites.
+
